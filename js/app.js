@@ -53,6 +53,7 @@ const galleryUlEl = document.querySelector('.js-gallery');
 const lightboxEl = document.querySelector('.js-lightbox');
 const lightboxImageEl = lightboxEl.querySelector('.lightbox__image');
 const closeBtnEl = lightboxEl.querySelector('button[data-action="close-lightbox"]');
+const overlayEl = lightboxEl.querySelector('.lightbox__overlay');
 
 const createGalleryItem = ({ preview, original, description }) => {
     return `
@@ -79,27 +80,48 @@ galleryUlEl.innerHTML = craeteGalleryMarkup(galleryItems);
 const galleryItemClickHandler = (evt) => {
     evt.preventDefault();
     console.log(evt.target.dataset.source);
+    if (evt.target === evt.currentTarget) return;
     openModal();
     setOriginalImgAtributes(evt.target);
 };
 
+// Открытие модального окна по клику на элементе галереи.
 function openModal() {
     lightboxEl.classList.add('is-open');
+    closeBtnEl.addEventListener('click', closeBtnClickHandler);
+    overlayEl.addEventListener('click', overlayClickHandler);
+    window.addEventListener('keydown', onEscPressHandler);
 }
 
-// Подмена значения атрибута `src` элемента `img.lightbox__image`
+// Подмена значения атрибута `src` элемента `img.lightbox__image`.
 function setOriginalImgAtributes(img) {
     lightboxImageEl.src = img.dataset.source;
     lightboxImageEl.alt = img.alt;
 }
-
-galleryUlEl.addEventListener('click', galleryItemClickHandler);
 
 // Закрытие модального окна по клику на кнопку `button[data-action="close-lightbox"]` и Очистка значения атрибута `src` элемента `img.lightbox__image`. Это необходимо для того, чтобы при следующем открытии модального окна, пока грузится изображение, мы не видели предыдущее.
 const closeBtnClickHandler = () => {
     lightboxEl.classList.remove('is-open');
     lightboxImageEl.src = '';
     lightboxImageEl.alt = '';
+    closeBtnEl.removeEventListener('click', closeBtnClickHandler);
+    overlayEl.removeEventListener('click', overlayClickHandler);
+    window.removeEventListener('keydown', onEscPressHandler);
 };
 
-closeBtnEl.addEventListener('click', closeBtnClickHandler);
+// Закрытие модального окна по клику на `div lightbox__overlay`.
+const overlayClickHandler = (evt) => {
+    if (evt.target === evt.currentTarget) {
+        closeBtnClickHandler();
+    }
+};
+
+// Закрытие модального окна по нажатию клавиши `ESC`.
+const onEscPressHandler = (evt) => {
+    if (evt.key === 'Escape') {
+        closeBtnClickHandler();
+    }
+};
+
+// Слушатели событий.
+galleryUlEl.addEventListener('click', galleryItemClickHandler);
